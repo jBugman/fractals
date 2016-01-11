@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	maxIterations = 75
-	size          = 786
-	animate       = false
+	maxIterations = 50
+	size          = 1024
+	animate       = true
 )
 
 func mandelbrot(z, c complex128) complex128 {
@@ -38,8 +38,8 @@ func colorCode(iteration, iterations int) color.Color {
 }
 
 func pixelToReal(w, h, x, y int, offsetX, offsetY, zoom float64) (float64, float64) {
-	rx := float64(x)/float64(w)*3 - 2
-	ry := float64(y)/float64(h)*3 - 1.5
+	rx := ((float64(x)/float64(w)+offsetX)*3 - 2) / zoom
+	ry := ((float64(y)/float64(h)+offsetY)*3 - 1.5) / zoom
 	return rx, ry
 }
 
@@ -62,16 +62,16 @@ func main() {
 	const x, y = 0.0, 0.0
 
 	img := fractal(size, size, x, y, zoom, maxIterations)
-	imaging.Save(img, fmt.Sprintf("%f_%f_%f.png", x, y, zoom))
+	imaging.Save(img, fmt.Sprintf("%.3f_%.3f_%.3f.png", x, y, zoom))
 
 	if !animate {
 		return
 	}
 	var wg sync.WaitGroup
-	for i := 0; i < maxIterations; i++ {
+	for i := 0; i < 300; i++ {
 		wg.Add(1)
 		go func(i int) {
-			frame := fractal(size, size, x, y, zoom, i)
+			frame := fractal(size, size, x-0.03*float64(i), y-0.006*float64(i), zoom+0.12*float64(i), maxIterations)
 			imaging.Save(frame, fmt.Sprintf("frames/frame_%03d.png", i))
 			println(i)
 			wg.Done()
