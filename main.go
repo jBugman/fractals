@@ -68,14 +68,21 @@ func main() {
 		return
 	}
 	var wg sync.WaitGroup
-	for i := 0; i < 300; i++ {
+	is := make(chan int)
+	for procs := 0; procs < 4; procs++ {
 		wg.Add(1)
-		go func(i int) {
-			frame := fractal(size, size, x-0.03*float64(i), y-0.006*float64(i), zoom+0.12*float64(i), maxIterations)
-			imaging.Save(frame, fmt.Sprintf("frames/frame_%03d.png", i))
-			println(i)
-			wg.Done()
-		}(i)
+		go func(is chan int) {
+			defer wg.Done()
+			for i := range is {
+				frame := fractal(size, size, x-0.03*float64(i), y-0.006*float64(i), zoom+0.12*float64(i), maxIterations)
+				imaging.Save(frame, fmt.Sprintf("frames/frame_%04d.png", i))
+				println(i)
+			}
+		}(is)
 	}
+	for i := 0; i < 1500; i++ {
+		is <- i
+	}
+	close(is)
 	wg.Wait()
 }
